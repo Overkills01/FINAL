@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encriptador y Desencriptador</title>
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    <style>
+        .volume-container {
+            position: relative;
+            margin-top: 20px;
+            z-index: 99999999999;
+            
+        }
+
+        #volumeControl {
+            height: 61px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    left: 108.4em;
+    width: 8%;
+    position: fixed;
+        }
+
+        #volumeControl:hover {
+            opacity: 1;
+        }
+
+        .volume-indicator {
+            font-family: 'Roboto';
+            background-color: #333;
+            color: white;
+            padding: 20px 24px;
+            border-radius: 35px;
+            display: none;
+            z-index: 998; /* Z-index menor para que esté detrás del control de volumen */
+}
+
+/* Nueva clase para centrar el volume-indicator y #volumeControl */
+.centered-flex {
+    position: fixed;
+    top: 91.4%;
+    right: 21%;
+    transform: translateY(-50%);
+    z-index: 99999999999;
+    box-shadow: 3px 8px 20px 0px #292929;
+}
+
+/* Responsividad para pantallas más pequeñas */
+@media screen and (min-width: 761px) and (max-width: 1366px) {
+
+    #volumeControl {
+        left: 88.4em;
+        width: 10%;
+    }
+    .centered-flex {
+        right: 9%;
+        top: 89.4%;
+    }
+}
+
+
+@media screen and (max-width: 768px) {
+    
+    .centered-flex {
+        right: 2%; /* Cambia la posición al 2% del borde derecho en pantallas más pequeñas */
+    }
+}
+
+ @media (max-width: 760px){
+
+            
+    .centered-flex {
+        top: 89%;
+     }
+} 
+    </style>
+</head>
+
+<body>
+    <div class="contenedor">
+        <header class="header">
+            <h1 class="titulo">Encriptador y Desencriptador de Texto</h1>
+        </header>
+
+        <main class="main">
+
+            <div class="container">
+                <div class="input-container">
+                    <textarea id="inputTexto" class="input-texto1" placeholder="Ingrese el texto"></textarea>
+                    <p class="Texto-exclamacion">⚠️Solo letras minúsculas y sin acentos⚠️</p>
+
+                </div>
+
+                <div class="input-container">
+                    <textarea id="outputTexto" class="input-texto2" placeholder="Resultado" readonly></textarea>
+                    <button onclick="copyToClipboard()" class="button-copiar">Copiar</button>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button type="button" id="encriptarButton" onclick="encriptarTexto()" class="button-encriptar">Encriptar</button>
+                <button type="button" id="desencriptarButton" onclick="desencriptarTexto()" class="button-desencriptar">Desencriptar</button>
+                <button id="liberameButton" onclick="liberarVideo()">Liberame</button>
+            </div>
+        </main>
+
+
+        <div class="modal" id="modal">
+            <div class="modal-content">
+                <p id="modal-message"></p>
+                <button onclick="cerrarModal()">Cerrar</button>
+            </div>
+        </div>
+
+        <!-- ZONA VIDEO -->
+        <video id="glitchVideo" src="Videos/glitch_-_27706 (1080p).mp4" muted></video>
+        <div id="floating-letters-container" class="floating-letters-container"></div>
+
+        <!-- ZONA AUDIO -->
+        <audio id="background-music" controls loop>
+            <source src="Musica/the-last-piano-112677.mp3" type="audio/mp3">
+        </audio>
+        <audio id="scary-music" controls loop>
+            <source src="Musica/scary-music-box-for-spooky-scenes-165983.mp3" type="audio/mp3">
+        </audio>
+        <audio id="interference-audio" controls>
+            <source src="Musica/Interference.mp3" type="audio/mp3">
+        </audio>
+
+        <!-- Volumen Maestro -->
+        <div class="volume-container">
+            <input type="range" id="volumeControl" min="0" max="100" value="50" step="1" oninput="controlAudioVolume()">
+            <!-- Agregamos la clase "centered-flex" al volume-indicator -->
+            <div class="volume-indicator centered-flex" id="volumeIndicator">Volumen: 50</div>
+        </div>
+
+        <!-- ZONA SCRIPT -->
+        <script src="script.js"></script>
+
+        <!-- ZONA FOOTER -->
+        <footer class="footer">
+            <p class="copyright">&copy; Created by Sebastian Sosa | 2024⏳</p>
+            <div id="countdown"></div>
+        </footer>
+    </div>
+
+    <!-- Custom script for audio control -->
+    <script>
+        let audioElements = document.querySelectorAll("audio");
+        let volumeControl = document.getElementById("volumeControl");
+        let volumeStep = 15; // Incremento del 15% al usar el scroll
+        let volumeIndicator = document.getElementById("volumeIndicator");
+        let volumeTimeout;
+
+        function controlAudioVolume() {
+            let volume = volumeControl.value / 100;
+            audioElements.forEach(function (audio) {
+                audio.volume = volume;
+            });
+
+            volumeIndicator.textContent = `Volumen: ${volumeControl.value}`;
+            volumeIndicator.style.display = 'block';
+
+            // Ocultar el indicador después de 1 segundo si no se ajusta el volumen nuevamente
+            clearTimeout(volumeTimeout);
+            volumeTimeout = setTimeout(() => {
+                volumeIndicator.style.display = 'none';
+            }, 1000);
+        }
+
+        function enableVolumeScroll() {
+            volumeControl.addEventListener("wheel", function (event) {
+                // Cancela el evento de scroll predeterminado para que no afecte el scroll de la página
+                event.preventDefault();
+
+                // Ajusta el volumen según la dirección del scroll
+                let delta = -1 * Math.sign(event.deltaY); // Invertimos la dirección
+                let currentVolume = parseInt(volumeControl.value, 10);
+
+                // Calculamos el nuevo volumen en incrementos del 15%
+                let newVolume = currentVolume + (delta * volumeStep);
+
+                // Asegura que el valor esté dentro del rango permitido
+                newVolume = Math.min(Math.max(newVolume, parseInt(volumeControl.min, 10)), parseInt(volumeControl.max, 10));
+
+                // Actualiza el valor de la barra de volumen y el volumen de audio
+                volumeControl.value = newVolume;
+                controlAudioVolume();
+            });
+        }
+
+        // Función para controlar el volumen inicialmente
+        function controlAudioVolume() {
+            let volume = volumeControl.value / 100;
+            audioElements.forEach(function (audio) {
+                audio.volume = volume;
+            });
+
+            volumeIndicator.textContent = `Volumen: ${volumeControl.value}`;
+            volumeIndicator.style.display = 'block';
+
+            // Ocultar el indicador después de 1 segundo si no se ajusta el volumen nuevamente
+            clearTimeout(volumeTimeout);
+            volumeTimeout = setTimeout(() => {
+                volumeIndicator.style.display = 'none';
+            }, 1000);
+        }
+
+        // Llama a la función para habilitar el scroll del volumen al pasar el mouse sobre la barra de volumen
+        enableVolumeScroll();
+
+        // Set initial volume
+        controlAudioVolume();
+    </script>
+</body>
+
+</html>
